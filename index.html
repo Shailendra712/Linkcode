@@ -1,64 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI News Generator</title>
+    <title>News Generator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
+            margin: 20px;
         }
+
+        input {
+            padding: 8px;
+            width: 300px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 8px 12px;
+            background-color: #f38925;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #eba043;
+        }
+
+        .clear-btn {
+            background-color: #f29a17;
+        }
+
+        .clear-btn:hover {
+            background-color: #c59058;
+        }
+
         #result {
             margin-top: 20px;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .news-container {
+            background: #f1cb96;
             padding: 15px;
-            border: 1px solid #ccc;
-            background-color: #f9f9f9;
+            margin-top: 10px;
+            border-left: 5px solid #f6cb8f;
         }
     </style>
 </head>
+
 <body>
+
     <input id="input" type="text" placeholder="Enter news topic">
     <button onclick="getNews()">Generate News</button>
+    <button class="clear-btn" onclick="clearNews()">Clear</button>
+
     <div id="result"></div>
 
     <script>
+        const input = document.getElementById("input");
+        const resultDiv = document.getElementById("result");
+
         async function getNews() {
-            const input = document.getElementById("input").value.trim();
-            if (!input) {
-                alert("Please enter a topic.");
+            const API_KEY = "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";
+            const endpoint = "https://api.groq.com/openai/v1/chat/completions";
+
+            if (input.value.trim() === "") {
+                alert("Please enter a topic!");
                 return;
             }
 
-            const API_KEY = "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";  // Replace with your actual API key
-
             try {
-                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                const response = await fetch(endpoint, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer " + API_KEY
+                        Authorization: `Bearer ${API_KEY}`,
                     },
                     body: JSON.stringify({
-                        model: "mixtral-8x7b-32768",
+                        model: "llama-3.3-70b-versatile",
                         messages: [
-                            { role: "user", content: `Generate news on topic: ${input} in <div> tag with CSS styling (no HTML or body tag).` }
-                        ]
-                    })
+                            {
+                                role: "user",
+                                content: `Generate news on topic: ${input.value}. Format in a div with CSS (no HTML or body tag).`,
+                            },
+                        ],
+                    }),
                 });
 
-                const data = await response.json();
-                console.log(data);
-                if (data.choices && data.choices.length > 0) {
-                    document.getElementById("result").innerHTML = data.choices[0].message.content;
+                const body = await response.json();
+                console.log(body);
+
+                if (body.choices && body.choices.length > 0) {
+                    const newDiv = document.createElement("div");
+                    newDiv.classList.add("news-container");
+                    newDiv.innerHTML = body.choices[0].message.content;
+                    resultDiv.appendChild(newDiv);
+                    input.value = ""; // Clear input after fetching news
                 } else {
-                    document.getElementById("result").innerHTML = "Error: No response from API.";
+                    alert("Failed to fetch news. Try again!");
                 }
+
             } catch (error) {
                 console.error("Error fetching news:", error);
-                document.getElementById("result").innerHTML = "Error fetching news.";
+                alert("Error fetching news. Check the console for details.");
             }
         }
+
+        function clearNews() {
+            input.value = "";
+            resultDiv.innerHTML = "";
+        }
     </script>
+
 </body>
+
 </html>
